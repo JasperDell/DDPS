@@ -392,21 +392,17 @@ class Node:
             print("File not found")
         try:
             with open(filename, 'rb') as file:
-                #connection.send(pickle.dumps(fileSize))
                 while True:
                     fileData = file.read(buffer)
                     time.sleep(0.001)
-                    #print(fileData)
                     if not fileData:
                         break
                     connection.sendall(fileData)
         except:
-            pass#print("File not found in directory")
+            pass
         print("File sent")
 
     def receiveFile(self, connection, filename):
-        # Receiving file in parts
-        # If file already in directory
         fileAlready = False
         try:
             with open(filename, 'rb') as file:
@@ -421,9 +417,6 @@ class Node:
                 return
         except FileNotFoundError:
             pass
-        # receiving file size
-        #fileSize = pickle.loads(connection.recv(buffer))
-        #print("File Size", fileSize)
         if not fileAlready:
             totalData = b''
             recvSize = 0
