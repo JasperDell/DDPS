@@ -34,7 +34,7 @@ class Node:
         # Server socket used as listening socket for incoming connections hence threaded
         try:
             self.ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.ServerSocket.bind((IP, PORT))
+            self.ServerSocket.bind((ip, port))
             self.ServerSocket.listen()
         except socket.error:
             print("Socket not opened")
