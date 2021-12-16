@@ -10,6 +10,7 @@ from collections import OrderedDict
 IP = "127.0.0.1"
 PORT = 2000
 buffer = 4096
+
 MAX_BITS = 10        # 10-bit
 MAX_NODES = 2 ** MAX_BITS
 # Takes key string, uses SHA-1 hashing and returns a 10-bit (1024) compressed integer
@@ -59,10 +60,12 @@ class Node:
             print("Connection with:", address[0], ":", address[1])
             print("Join network request recevied")
             self.joinNode(connection, address, rDataList)
+            self.printMenu()
         elif connectionType == 1:
             print("Connection with:", address[0], ":", address[1])
             print("Upload/Download request recevied")
             self.transferFile(connection, address, rDataList)
+            self.printMenu()
         elif connectionType == 2:
             #print("Ping recevied")
             connection.sendall(pickle.dumps(self.pred))
@@ -177,7 +180,9 @@ class Node:
         # Accepting connections from other threads
         threading.Thread(target=self.listenThread, args=()).start()
         threading.Thread(target=self.pingSucc, args=()).start()
-        self.sendJoinRequest("127.0.0.1", 2000)
+        # In case of connecting to other clients
+        while True:
+            self.asAClientThread()
 
     def pingSucc(self):
         while True:
@@ -217,7 +222,15 @@ class Node:
                     self.succID = self.id
                 self.updateFTable()
                 self.updateOtherFTables()
+                self.printMenu()
 
+    # Handles all outgoing connections
+    def asAClientThread(self):
+        if self.test:
+            self.test = False
+            ip = "127.0.0.1"
+            port = 2000
+            self.sendJoinRequest(ip, int(port))
 
     def sendJoinRequest(self, ip, port):
         try:
@@ -438,12 +451,18 @@ class Node:
                 self.downloadFile(filename)
                 # connection.send(pickle.dumps(True))
 
+    def printMenu(self):
+        print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
+        print("5. Print Finger Table\n6. Print my predecessor and successor")
+
     def printFTable(self):
         print("Printing F Table")
         for key, value in self.fingerTable.items():
             print("KeyID:", key, "Value", value)
 
 
+IP = "127.0.0.1"
+PORT = 2000
 myNode = Node("127.0.0.1", 2000)
 myNode.start()
 myNode.ServerSocket.close()
