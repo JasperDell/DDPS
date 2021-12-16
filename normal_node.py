@@ -1,4 +1,3 @@
-#Starts network with sys arg PORT and joins network "127.0.0.1", 2000
 import socket, random
 import threading
 import pickle
@@ -9,6 +8,7 @@ import os
 from collections import OrderedDict
 # Default values if command line arguments not given
 IP = "127.0.0.1"
+PORT = 2000
 buffer = 4096
 
 MAX_BITS = 10        # 10-bit
@@ -20,6 +20,7 @@ def getHash(key):
 
 class Node:
     def __init__(self, ip, port):
+        self.test = True
         self.filenameList = []
         self.ip = ip
         self.port = port
@@ -59,12 +60,10 @@ class Node:
             print("Connection with:", address[0], ":", address[1])
             print("Join network request recevied")
             self.joinNode(connection, address, rDataList)
-            self.printMenu()
         elif connectionType == 1:
             print("Connection with:", address[0], ":", address[1])
             print("Upload/Download request recevied")
             self.transferFile(connection, address, rDataList)
-            self.printMenu()
         elif connectionType == 2:
             #print("Ping recevied")
             connection.sendall(pickle.dumps(self.pred))
@@ -222,13 +221,14 @@ class Node:
                     self.succID = self.id
                 self.updateFTable()
                 self.updateOtherFTables()
-                self.printMenu()
 
     # Handles all outgoing connections
     def asAClientThread(self):
+        if self.test:
+            self.test = False
             ip = "127.0.0.1"
             port = 2000
-            self.sendJoinRequest(ip, int(port))
+            self.sendJoinRequest(ip, port)
 
     def sendJoinRequest(self, ip, port):
         try:
@@ -237,9 +237,10 @@ class Node:
             peerSocket.connect(recvIPPort)
             sDataList = [0, self.address]
 
-            peerSocket.sendall(pickle.dumps(sDataList))
-            rDataList = pickle.loads(peerSocket.recv(buffer))
-
+            peerSocket.sendall(pickle.dumps(sDataList))     # Sending self peer address to add to network
+            rDataList = pickle.loads(peerSocket.recv(buffer))   # Receiving new pred
+            # Updating pred and succ
+            # print('before', self.predID, self.succID)
             self.pred = rDataList[0]
             self.predID = getHash(self.pred[0] + ":" + str(self.pred[1]))
             self.succ = recvIPPort
@@ -254,6 +255,42 @@ class Node:
             peerSocket.close()
         except socket.error:
             print("Socket error. Recheck IP/Port.")
+
+    def leaveNetwork(self):
+        # First inform my succ to update its pred
+        pSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        pSocket.connect(self.succ)
+        pSocket.sendall(pickle.dumps([4, 0, self.pred]))
+        pSocket.close()
+        # Then inform my pred to update its succ
+        pSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        pSocket.connect(self.pred)
+        pSocket.sendall(pickle.dumps([4, 1, self.succ]))
+        pSocket.close()
+        print("I had files:", self.filenameList)
+        # And also replicating its files to succ as a client
+        print("Replicating files to other nodes before leaving")
+        for filename in self.filenameList:
+            pSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            pSocket.connect(self.succ)
+            sDataList = [1, 1, filename]
+            pSocket.sendall(pickle.dumps(sDataList))
+            with open(filename, 'rb') as file:
+                # Getting back confirmation
+                pSocket.recv(buffer)
+                self.sendFile(pSocket, filename)
+                pSocket.close()
+                print("File replicated")
+            pSocket.close()
+
+        self.updateOtherFTables()   # Telling others to update their f tables
+
+        self.pred = (self.ip, self.port)    # Chaning the pointers to default
+        self.predID = self.id
+        self.succ = (self.ip, self.port)
+        self.succID = self.id
+        self.fingerTable.clear()
+        print(self.address, "has left the network")
 
     def uploadFile(self, filename, recvIPport, replicate):
         print("Uploading file", filename)
@@ -327,7 +364,6 @@ class Node:
             recvIPPort = self.getSuccessor(self.succ, entryId)
             recvId = getHash(recvIPPort[0] + ":" + str(recvIPPort[1]))
             self.fingerTable[entryId] = (recvId, recvIPPort)
-        # self.printFTable()
 
     def updateOtherFTables(self):
         here = self.succ
@@ -410,18 +446,10 @@ class Node:
                 os.remove(filename)
                 time.sleep(5)
                 self.downloadFile(filename)
-                # connection.send(pickle.dumps(True))
-
-    def printMenu(self):
-        print("\n1. Join Network\n2. Leave Network\n")
-
-    def printFTable(self):
-        print("Printing F Table")
-        for key, value in self.fingerTable.items():
-            print("KeyID:", key, "Value", value)
 
 
 PORT = int(sys.argv[1])
-myNode = Node(IP, PORT)
+
+myNode = Node("127.0.0.1", PORT)
 myNode.start()
 myNode.ServerSocket.close()
