@@ -1,7 +1,6 @@
-import socket, random
+import socket
 import threading
 import pickle
-import sys
 import time
 import hashlib
 import os
@@ -60,12 +59,10 @@ class Node:
             print("Connection with:", address[0], ":", address[1])
             print("Join network request recevied")
             self.joinNode(connection, address, rDataList)
-            self.printMenu()
         elif connectionType == 1:
             print("Connection with:", address[0], ":", address[1])
             print("Upload/Download request recevied")
             self.transferFile(connection, address, rDataList)
-            self.printMenu()
         elif connectionType == 2:
             #print("Ping recevied")
             connection.sendall(pickle.dumps(self.pred))
@@ -222,7 +219,6 @@ class Node:
                     self.succID = self.id
                 self.updateFTable()
                 self.updateOtherFTables()
-                self.printMenu()
 
     # Handles all outgoing connections
     def asAClientThread(self):
@@ -366,7 +362,6 @@ class Node:
             recvIPPort = self.getSuccessor(self.succ, entryId)
             recvId = getHash(recvIPPort[0] + ":" + str(recvIPPort[1]))
             self.fingerTable[entryId] = (recvId, recvIPPort)
-        # self.printFTable()
 
     def updateOtherFTables(self):
         here = self.succ
@@ -409,8 +404,6 @@ class Node:
         print("File sent")
 
     def receiveFile(self, connection, filename):
-        # Receiving file in parts
-        # If file already in directory
         fileAlready = False
         try:
             with open(filename, 'rb') as file:
@@ -425,9 +418,6 @@ class Node:
                 return
         except FileNotFoundError:
             pass
-        # receiving file size
-        #fileSize = pickle.loads(connection.recv(buffer))
-        #print("File Size", fileSize)
         if not fileAlready:
             totalData = b''
             recvSize = 0
@@ -435,9 +425,7 @@ class Node:
                 with open(filename, 'wb') as file:
                     while True:
                         fileData = connection.recv(buffer)
-                        #print(fileData)
                         recvSize += len(fileData)
-                        #print(recvSize)
                         if not fileData:
                             break
                         totalData += fileData
@@ -449,16 +437,8 @@ class Node:
                 os.remove(filename)
                 time.sleep(5)
                 self.downloadFile(filename)
-                # connection.send(pickle.dumps(True))
 
-    def printMenu(self):
-        print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
-        print("5. Print Finger Table\n6. Print my predecessor and successor")
 
-    def printFTable(self):
-        print("Printing F Table")
-        for key, value in self.fingerTable.items():
-            print("KeyID:", key, "Value", value)
 
 
 IP = "127.0.0.1"
