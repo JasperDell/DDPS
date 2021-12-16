@@ -59,12 +59,10 @@ class Node:
             print("Connection with:", address[0], ":", address[1])
             print("Join network request recevied")
             self.joinNode(connection, address, rDataList)
-            self.printMenu()
         elif connectionType == 1:
             print("Connection with:", address[0], ":", address[1])
             print("Upload/Download request recevied")
             self.transferFile(connection, address, rDataList)
-            self.printMenu()
         elif connectionType == 2:
             #print("Ping recevied")
             connection.sendall(pickle.dumps(self.pred))
@@ -219,7 +217,6 @@ class Node:
                     self.succID = self.id
                 self.updateFTable()
                 self.updateOtherFTables()
-                self.printMenu()
 
 
     def sendJoinRequest(self, ip, port):
@@ -440,10 +437,6 @@ class Node:
                 time.sleep(5)
                 self.downloadFile(filename)
                 # connection.send(pickle.dumps(True))
-
-    def printMenu(self):
-        print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
-        print("5. Print Finger Table\n6. Print my predecessor and successor")
 
     def printFTable(self):
         print("Printing F Table")
