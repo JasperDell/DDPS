@@ -180,7 +180,6 @@ class Node:
         threading.Thread(target=self.pingSucc, args=()).start()
         # In case of connecting to other clients
         while True:
-            print("Listening to other clients")
             self.asAClientThread()
 
     def pingSucc(self):
