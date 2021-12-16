@@ -31,7 +31,7 @@ class Node:
         self.succID = self.id
         self.fingerTable = OrderedDict()        # Dictionary: key = IDs and value = (IP, port) tuple
         # Making sockets
-            # Server socket used as listening socket for incoming connections hence threaded
+        # Server socket used as listening socket for incoming connections hence threaded
         try:
             self.ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.ServerSocket.bind((IP, PORT))
@@ -84,7 +84,7 @@ class Node:
         else:
             print("Problem with connection type")
         #connection.close()
-    
+
     # Deals with join network request by other node
     def joinNode(self, connection, address, rDataList):
         if rDataList:
@@ -168,7 +168,7 @@ class Node:
         self.succ = newSucc
         self.succID = getHash(newSucc[0] + ":" + str(newSucc[1]))
         # print("Updated succ to", self.succID)
-    
+
     def updatePred(self, rDataList):
         newPred = rDataList[2]
         self.pred = newPred
@@ -181,9 +181,9 @@ class Node:
         threading.Thread(target=self.pingSucc, args=()).start()
         # In case of connecting to other clients
         while True:
-            print("Listening to other clients")   
+            print("Listening to other clients")
             self.asAClientThread()
-    
+
     def pingSucc(self):
         while True:
             # Ping every 5 seconds
@@ -243,12 +243,6 @@ class Node:
         elif userChoice == "4":
             filename = input("Enter filename: ")
             self.downloadFile(filename)
-        elif userChoice == "5":
-            self.printFTable()
-        elif userChoice == "6":
-            print("My ID:", self.id, "Predecessor:", self.predID, "Successor:", self.succID)
-        # Reprinting Menu
-        # self.printMenu()
 
     def sendJoinRequest(self, ip, port):
         try:
@@ -256,7 +250,7 @@ class Node:
             peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             peerSocket.connect(recvIPPort)
             sDataList = [0, self.address]
-            
+
             peerSocket.sendall(pickle.dumps(sDataList))     # Sending self peer address to add to network
             rDataList = pickle.loads(peerSocket.recv(buffer))   # Receiving new pred
             # Updating pred and succ
@@ -275,7 +269,7 @@ class Node:
             peerSocket.close()
         except socket.error:
             print("Socket error. Recheck IP/Port.")
-    
+
     def leaveNetwork(self):
         # First inform my succ to update its pred
         pSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -302,16 +296,16 @@ class Node:
                 pSocket.close()
                 print("File replicated")
             pSocket.close()
-        
+
         self.updateOtherFTables()   # Telling others to update their f tables
-        
+
         self.pred = (self.ip, self.port)    # Chaning the pointers to default
         self.predID = self.id
         self.succ = (self.ip, self.port)
         self.succID = self.id
         self.fingerTable.clear()
         print(self.address, "has left the network")
-    
+
     def uploadFile(self, filename, recvIPport, replicate):
         print("Uploading file", filename)
         # If not found send lookup request to get peer to upload file
@@ -335,7 +329,7 @@ class Node:
             print("File not in directory")
         except socket.error:
             print("Error in uploading file")
-    
+
     def downloadFile(self, filename):
         print("Downloading file", filename)
         fileID = getHash(filename)
@@ -344,7 +338,7 @@ class Node:
         sDataList = [1, 0, filename]
         cSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         cSocket.connect(recvIPport)
-        cSocket.sendall(pickle.dumps(sDataList))      
+        cSocket.sendall(pickle.dumps(sDataList))
         # Receiving confirmation if file found or not
         fileData = cSocket.recv(buffer)
         if fileData == b"NotFound":
@@ -372,7 +366,7 @@ class Node:
                 print("Connection denied while getting Successor")
         # print(rDataList)
         return recvIPPort
-    
+
     def updateFTable(self):
         for i in range(MAX_BITS):
             entryId = (self.id + (2 ** i)) % MAX_NODES
@@ -384,8 +378,7 @@ class Node:
             recvIPPort = self.getSuccessor(self.succ, entryId)
             recvId = getHash(recvIPPort[0] + ":" + str(recvIPPort[1]))
             self.fingerTable[entryId] = (recvId, recvIPPort)
-        # self.printFTable()
-    
+
     def updateOtherFTables(self):
         here = self.succ
         while True:
@@ -467,24 +460,14 @@ class Node:
                 os.remove(filename)
                 time.sleep(5)
                 self.downloadFile(filename)
-                    # connection.send(pickle.dumps(True))
+                # connection.send(pickle.dumps(True))
 
     def printMenu(self):
         print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
-        print("5. Print Finger Table\n6. Print my predecessor and successor")
 
-    def printFTable(self):
-        print("Printing F Table")
-        for key, value in self.fingerTable.items(): 
-            print("KeyID:", key, "Value", value)
 
-if len(sys.argv) < 3:
-    print("Arguments not supplied (Defaults used)")
-else:
-    IP = sys.argv[1]
-    PORT = int(sys.argv[2])
-
-myNode = Node(IP, PORT)
+IP = sys.argv[1]
+myNode = Node("127.0.0.1", PORT)
 print("My ID is:", myNode.id)
 myNode.start()
 myNode.ServerSocket.close()
