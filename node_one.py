@@ -179,10 +179,7 @@ class Node:
         # Accepting connections from other threads
         threading.Thread(target=self.listenThread, args=()).start()
         threading.Thread(target=self.pingSucc, args=()).start()
-        # In case of connecting to other clients
-        while True:
-            print("Listening to other clients")
-            self.asAClientThread()
+        self.sendJoinRequest("127.0.0.1", 2000)
 
     def pingSucc(self):
         while True:
@@ -224,11 +221,6 @@ class Node:
                 self.updateOtherFTables()
                 self.printMenu()
 
-    # Handles all outgoing connections
-    def asAClientThread(self):
-        if self.test:
-            self.test = False
-            self.sendJoinRequest("127.0.0.1", 2000)
 
     def sendJoinRequest(self, ip, port):
         try:
