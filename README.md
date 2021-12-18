@@ -1,6 +1,6 @@
 # Distributed Data Processing Systems Assignment 2
 ## Design Your Own Distributed System
-This repository contains the code necessary to run an implementation of Chord built by Jasper G Dellaert and Akshay Ram Bhat for the course Distributed Data Processing Systems at the Leiden Institute of Advanced Computer Science in Leiden University by Prof. Alexander Uta.
+This repository contains the code necessary to run an implementation of Chord built by Jasper Dellaert and Akshay Ram Bhat for the course Distributed Data Processing Systems at the Leiden Institute of Advanced Computer Science in Leiden University by Prof. Alexander Uta.
 
 ## Prerequisites
 * Python 3.7.9
