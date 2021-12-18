@@ -10,7 +10,7 @@ In order to run the code follow the instructions in this order:
 
 1. Run the following command on an open terminal.
 ```./chord.sh```
-This will start the connection and have 5 nodes running.
+This will start the connection and have 6 nodes running.
 2. Open another terminal and run this command to start connecting to the network
 ```python3 user_node.py <PORT_NUMBER>```
 where ```PORT_NUMBER``` is a a port number that is active in the network. If using the shell script provided, use ```2010```.
